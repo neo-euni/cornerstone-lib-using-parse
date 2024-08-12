@@ -1,1 +1,1 @@
-# quasar-dicom-sample
+# quasar-sample
