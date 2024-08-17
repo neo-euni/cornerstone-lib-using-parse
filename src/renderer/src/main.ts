@@ -8,6 +8,6 @@ import 'quasar/dist/quasar.css'
 
 createApp(App)
   .use(Quasar, {
-    plugins: {} // import Quasar plugins and add here
+    plugins: {} 
   })
   .mount('#app')

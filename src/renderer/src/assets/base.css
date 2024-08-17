@@ -33,17 +33,12 @@
   --color-text:#3C4255;
   --color-light-point: #A8C5F0;
   --color-bold-point: #93ABEA;
-
-
-/* 여기에 다른 전역 스타일이 올 수 있습니다 */
-
 }
 
 :root {
   --color-background: var(--color-tertiary);
   --color-background-soft: var(--ev-c-black-soft);
   --color-background-mute: var(--ev-c-black-mute);
-
   --color-text: var(--color-quaternary);
 }
 

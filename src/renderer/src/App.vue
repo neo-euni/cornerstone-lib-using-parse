@@ -10,18 +10,10 @@
   <!-- </div> -->
 </template>
 
-<script>
+<script setup>
 import './assets/base.css'
 import Header from './components/Header.vue'
 import ContentArea from './components/ContentArea.vue'
-
-
-export default {
-  components: {
-    Header,
-    ContentArea
-  }
-}
 </script>
 
 <style>
@@ -34,7 +26,4 @@ export default {
   text-align: left;
   font-size: 16px;
 }
-
-
-
 </style>
