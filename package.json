@@ -24,6 +24,9 @@
     "@electron-toolkit/preload": "^3.0.0",
     "@electron-toolkit/utils": "^3.0.0",
     "@quasar/extras": "^1.16.12",
+    "cornerstone-core": "^10.8.1",
+    "cornerstone-tools": "^6.0.10",
+    "cornerstone-wado-image-loader": "^4.13.2",
     "dicom-parser": "^1.8.21",
     "quasar": "^2.16.6"
   },

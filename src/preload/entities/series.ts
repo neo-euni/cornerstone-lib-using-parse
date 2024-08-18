@@ -1,56 +1,60 @@
-import { DataSet } from 'dicom-parser';
-import { Instance } from './instance';
+import { DataSet } from 'dicom-parser'
+import { Instance } from './instance'
 
 export class Series {
-    private dataSet: DataSet;
-    private instanceList: Instance[];
+  private dataSet: DataSet
+  private instanceList: Instance[]
+  private seriesInstanceUID: string
+  private seriesNumber: string
 
-    constructor(dataSet: DataSet) {
-        this.dataSet = dataSet;
-        this.instanceList = this.extractInstances();
-    }
+  constructor(dataSet: DataSet) {
+    this.dataSet = dataSet
+    this.instanceList = this.extractInstances()
+    this.seriesInstanceUID = this.dataSet.string('x0020000e') || ''
+    this.seriesNumber = this.dataSet.string('x00200011') || ''
+  }
 
-    private extractInstances(): Instance[] {
-        const instanceList: Instance[] = [];
-        const sopInstanceUIDs: Set<string> = new Set();
+  private extractInstances(): Instance[] {
+    const instanceList: Instance[] = []
+    const sopInstanceUIDs: Set<string> = new Set()
 
-        Object.keys(this.dataSet.elements).forEach(tag => {
-            if (tag === 'x00080018') { // SOPInstanceUID 태그
-                const sopInstanceUID = this.dataSet.string(tag);
-                if (sopInstanceUID && !sopInstanceUIDs.has(sopInstanceUID)) {
-                    sopInstanceUIDs.add(sopInstanceUID);
-                    instanceList.push(new Instance(this.dataSet));
-                }
-            }
-        });
+    Object.keys(this.dataSet.elements).forEach((tag) => {
+      if (tag === 'x00080018') {
+        // SOPInstanceUID 태그
+        const sopInstanceUID = this.dataSet.string(tag)
+        if (sopInstanceUID && !sopInstanceUIDs.has(sopInstanceUID)) {
+          sopInstanceUIDs.add(sopInstanceUID)
+          instanceList.push(new Instance(this.dataSet))
+        }
+      }
+    })
 
-        return instanceList;
-    }
+    return instanceList
+  }
 
-    get seriesInstanceUID(): string {
-        return this.dataSet.string('x0020000e') || '';
-    }
+  getSeriesInstanceUID(): string {
+    return this.seriesInstanceUID
+  }
 
-    get seriesNumber(): string {
-        return this.dataSet.string('x00200011') || '';
-    }
+  getSeriesNumber(): string {
+    return this.seriesNumber
+  }
 
-    get modality(): string {
-        return this.dataSet.string('x00080060') || '';
-    }
+  getInstancesList(): Instance[] {
+    return this.instanceList
+  }
 
-    get instances(): Instance[] {
-        return this.instanceList;
-    }
+  print(): string {
+    const results: string[] = []
+    results.push(`    SeriesInstanceUID: ${this.getSeriesInstanceUID()}`)
+    results.push(`    SeriesNumber: ${this.getSeriesNumber()}`)
+    results.push('    Instances:')
 
-    print(): string {
-        const results: string[] = [];
-        results.push(`    SeriesInstanceUID: ${this.seriesInstanceUID}`);
-        results.push(`    SeriesNumber: ${this.seriesNumber}`);
-        results.push(`    Modality: ${this.modality}`);
-        results.push('    Instances:');
-        this.instances.forEach(instance => instance.print());
+    this.getInstancesList().forEach((instance) => {
+      const instancePrint = instance.print()
+      results.push(`      ${instancePrint}`)
+    })
 
-        return results.join('\n');
-    }
+    return results.join('\n')
+  }
 }

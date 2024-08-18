@@ -42,7 +42,6 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  
   ipcMain.on('ping', () => console.log('pong'))
 
   createWindow()
@@ -52,11 +51,8 @@ app.whenReady().then(() => {
   })
 })
 
-
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
 })
-
-

@@ -16,6 +16,9 @@ declare global {
     api: {
       parseDicomFile(filePath: string): null
       parseDicomData: (dicomFilePath: string) => ParsedData
+      parseAndLoadImage: (filePath: string) => Promise<any>
+      filePathToArrayBuffer: (filePath: string) => ArrayBuffer
+      loadImage(arrayBuffer): Promise<any>
     }
   }
 }

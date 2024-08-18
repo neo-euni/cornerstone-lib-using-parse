@@ -1,13 +1,33 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import parse from './dicomFileParse'
+import { toArrayBuffer } from './imageParse'
 
 const api = {
   parseDicomFile: (filePath: string) => {
-    console.log("[preload] api.parsedDicomFile in")
-    console.log("[preload] File path received:", filePath); 
-      const parsedData = parse(filePath);
-      return parsedData;
+    console.log('[preload] api.parsedDicomFile in')
+    console.log('[preload] File path received:', filePath)
+    const parsedData = parse(filePath)
+    return parsedData
+  },
+  parseAndLoadImage: async (filePath: string): Promise<any> => {
+    try {
+      console.log('filePath:', filePath) // filepaht가 제대로 들어옴
+      console.log('[preload] api.parseAndLoadImage in') // 여기까지는 잘 들어옴
+      // filePath를 읽어서 ArrayBuffer로 변환
+      // TODO: 여기부터 preload 스크립트를 읽지 못한다고 함
+      const arrayBuffer = toArrayBuffer(filePath)
+      // TODO: 경로문제임을 확인
+      // console.log('arrayBuffer:', arrayBuffer)
+
+      // ArrayBuffer를 이미지로 변환
+      // const image = await loadImage(arrayBuffer)
+      console.log('이미지함수까지 왔낭')
+      // return image
+    } catch (error) {
+      console.error('Error parsing and loading DICOM file:', error)
+      throw error
+    }
   }
 }
 

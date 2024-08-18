@@ -4,25 +4,23 @@ export class Instance {
   private dataSet: DataSet
   private sopInstanceUID: string
   private instanceNumber: string
-  private rows: string
-  private columns: string
-  private bitsAllocated: string
-  private bitsStored: string
-  private highBit: string
-  private pixelRepresentation: string
-  private modality: string
+  private rows: number
+  private columns: number
+  private bitsAllocated: number
+  private bitsStored: number
+  private highBit: number
+  private pixelRepresentation: number
 
   constructor(dataSet: DataSet) {
     this.dataSet = dataSet
     this.sopInstanceUID = this.dataSet.string('x00080018') || ''
     this.instanceNumber = this.dataSet.string('x00200013') || ''
-    this.rows = this.dataSet.string('x00280010') || ''
-    this.columns = this.dataSet.string('x00280011') || ''
-    this.bitsAllocated = this.dataSet.string('x00280100') || ''
-    this.bitsStored = this.dataSet.string('x00280101') || ''
-    this.highBit = this.dataSet.string('x00280102') || ''
-    this.pixelRepresentation = this.dataSet.string('x00280103') || ''
-    this.modality = this.dataSet.string('x00080060') || ''
+    this.rows = this.dataSet.uint16('x00280010') || 0
+    this.columns = this.dataSet.uint16('x00280011') || 0
+    this.bitsAllocated = this.dataSet.uint16('x00280100') || 0
+    this.bitsStored = this.dataSet.uint16('x00280101') || 0
+    this.highBit = this.dataSet.uint16('x00280102') || 0
+    this.pixelRepresentation = this.dataSet.uint16('x00280103') || 0
   }
 
   getSopInstanceUID = (): string => this.dataSet.string('x00080018') || ''
@@ -35,17 +33,17 @@ export class Instance {
 
   getPixelSpacing = (): string => this.dataSet.string('x00280030') || ''
 
-  getRows = (): string => this.dataSet.string('x00280010') || ''
+  getRows = (): number => this.dataSet.uint16('x00280010') || 0
 
-  getColumns = (): string => this.dataSet.string('x00280011') || ''
+  getColumns = (): number => this.dataSet.uint16('x00280011') || 0
 
-  getBitsAllocated = (): string => this.dataSet.string('x00280100') || ''
+  getBitsAllocated = (): number => this.dataSet.uint16('x00280100') || 0
 
-  getBitsStored = (): string => this.dataSet.string('x00280101') || ''
+  getBitsStored = (): number => this.dataSet.uint16('x00280101') || 0
 
-  getHighBit = (): string => this.dataSet.string('x00280102') || ''
+  getHighBit = (): number => this.dataSet.uint16('x00280102') || 0
 
-  getPixelRepresentation = (): string => this.dataSet.string('x00280103') || ''
+  getPixelRepresentation = (): number => this.dataSet.uint16('x00280103') || 0
 
   getRescaleIntercept = (): string => this.dataSet.string('x00281052') || ''
 
@@ -55,14 +53,12 @@ export class Instance {
 
   getWindowWidth = (): string => this.dataSet.string('x00281051') || ''
 
-  getModality = (): string => this.dataSet.string('x00080060') || ''
-
   getPixelData = (): string => this.dataSet.string('x7fe00010') || ''
 
   print = (): string => {
-    const results: string[] = []
-    results.push(`SOPInstanceUID: ${this.sopInstanceUID}`)
-    results.push(`InstanceNumber: ${this.instanceNumber}`)
+    const results: (string | number)[] = []
+    results.push(`SOPInstanceUID: ${this.getSopInstanceUID()}`)
+    results.push(`InstanceNumber: ${this.getInstanceNumber()}`)
     results.push(`ImagePosition: ${this.getImagePosition()}`)
     results.push(`ImageOrientation: ${this.getImageOrientation()}`)
     results.push(`PixelSpacing: ${this.getPixelSpacing()}`)
@@ -76,9 +72,8 @@ export class Instance {
     results.push(`RescaleSlope: ${this.getRescaleSlope()}`)
     results.push(`WindowCenter: ${this.getWindowCenter()}`)
     results.push(`WindowWidth: ${this.getWindowWidth()}`)
-    results.push(`Modality: ${this.getModality()}`)
     results.push(`PixelData: ${this.getPixelData()}`)
 
-    return results.join('\n')
+    return results.join('\n') // 각 항목을 줄바꿈으로 구분하여 문자열로 반환
   }
 }
