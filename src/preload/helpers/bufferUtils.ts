@@ -30,6 +30,7 @@ export function dicomFileBufferToArrayBuffer(buffer: Buffer): ArrayBuffer {
  * @returns 파일의 ArrayBuffer
  */
 export function readDicomFileToArrayBuffer(filePath: string): ArrayBuffer {
+  console.log('[Util]readDicomFileToArrayBuffer function in')
   const buffer = readDicomFileToBuffer(filePath)
   return dicomFileBufferToArrayBuffer(buffer)
 }

@@ -14,7 +14,8 @@ function createWindow(): void {
     ...(process.platform === 'linux' ? { icon } : {}), //리눅스 환경에서 데이터를 출력활 때 아이콘을 보여줌.
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      nodeIntegration: true
     }
   })
 

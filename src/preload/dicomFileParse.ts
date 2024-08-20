@@ -9,6 +9,8 @@ import { Preamble } from './entities/preamble'
 import { Prefix } from './entities/prefix'
 import { FileMetaElements } from './entities/fileMetaElements'
 import { readDicomFileToBuffer } from './helpers/bufferUtils'
+import { Image } from './entities/image'
+
 // import fs from 'fs'
 
 class ParsedData {
@@ -19,20 +21,17 @@ class ParsedData {
     public patient: Patient,
     public studies: Study,
     public series: Series,
-    public instance: Instance
+    public instance: Instance,
+    public image: Image
   ) {}
 }
 
 function dicomParseDataSet(filePath: string): ParsedData {
   console.log('dicomParsedDataSet function in')
   const dicomFileBuffer: Buffer = readDicomFileToBuffer(filePath) // bufferUtils 모듈 사용
-  const byteArray: Uint8Array = new Uint8Array(dicomFileBuffer) // dicomParser라이브러리는 바이너리 데이터를 Uint8Array로 받아들임
-  const dicomDataSet = dicomParser.parseDicom(byteArray)
+  const byteArray: Uint8Array = new Uint8Array(dicomFileBuffer) // dicomParser라이브러리는 바이너리 데이터를 Uint8Array로 받아들이기 때문에 변환
+  const dicomDataSet = dicomParser.parseDicom(byteArray) // dicomParser를 사용하여 데이터셋 파싱
   console.log('filePath 제대로 들어왔나: ', filePath)
-
-  // const dicomFileBuffer: Buffer = fs.readFileSync(filePath)
-  // const byteArray: Uint8Array = new Uint8Array(dicomFileBuffer)
-  // const dicomDataSet = dicomParser.parseDicom(byteArray)
 
   // header 객체 생성
   const preamble = new Preamble(byteArray.slice(0, 128))
@@ -57,7 +56,19 @@ function dicomParseDataSet(filePath: string): ParsedData {
   const instance = new Instance(dicomDataSet)
   console.log(instance.print())
 
-  return new ParsedData(preamble, prefix, fileMetaElements, patient, studies, series, instance)
+  const image = new Image(dicomDataSet)
+  console.log('이미지 객체 생성하고왔어 image객체가 생성되고 이 로그가 떠야해')
+
+  return new ParsedData(
+    preamble,
+    prefix,
+    fileMetaElements,
+    patient,
+    studies,
+    series,
+    instance,
+    image
+  )
 }
 
 export default dicomParseDataSet
