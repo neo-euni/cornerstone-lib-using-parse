@@ -57,7 +57,7 @@ function dicomParseDataSet(filePath: string): ParsedData {
   console.log(instance.print())
 
   const image = new Image(dicomDataSet)
-  console.log('이미지 객체 생성하고왔어 image객체가 생성되고 이 로그가 떠야해')
+  console.log(image.print())
 
   return new ParsedData(
     preamble,

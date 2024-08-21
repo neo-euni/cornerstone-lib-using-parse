@@ -80,7 +80,7 @@ export class Image {
     return this.samplesPerPixel
   }
 
-  print(): string | number {
+  print(): string {
     const results: string[] = []
     results.push(`Pixel Data: ${this.pixelData ? this.pixelData : 'Not Found'}`)
     results.push(`Rows: ${this.rows}`)

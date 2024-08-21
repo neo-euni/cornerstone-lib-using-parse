@@ -224,24 +224,37 @@ function renderDicomToDiv(parsedData) {
   canvas.width = cols
   canvas.height = rows
 
+  const bitsAllocated = parsedData.value?.image?.bitsAllocated || 8
+  const maxPixelValue = Math.pow(2, bitsAllocated) - 1
+
+  // ImageData 생성
+  const renderedImageData = ctx.createImageData(cols, rows)
+  const contextImageData = renderedImageData.data
+
   // 다중 프레임 중 첫 번째 프레임을 렌더링합니다.
   const bytesPerPixel = 4 // RGBA 4채널
-  const frameSize = rows * cols * bytesPerPixel // 한 프레임의 크기
+  const frameSize = rows * cols // 한 프레임의 크기
 
-  const imageDataContext = ctx.createImageData(cols, rows)
-  const imageDataContextData = imageDataContext.data
+  for (let i = 0; i < frameSize; i++) {
+    const rawPixelValue = pixelData[i]
 
-  // 첫 번째 프레임을 가져옵니다.
-  const frameIndex = 0
-  const start = frameIndex * frameSize
-  const end = start + frameSize
+    // const imageDataContext = ctx.createImageData(cols, rows)
+    // const imageDataContextData = imageDataContext.data
 
-  // Uint8ClampedArray를 통해 첫 번째 프레임의 픽셀 데이터를 캡처합니다.
-  for (let i = start; i < end; i++) {
-    imageDataContextData[i - start] = pixelData[i]
+    const pixelValue = Math.round((rawPixelValue / maxPixelValue) * 255)
+
+    // RGBA 채널에 값 할당 (grayscale을 R, G, B에 동일하게 할당)
+    contextImageData[i * bytesPerPixel] = pixelValue // Red
+    contextImageData[i * bytesPerPixel + 1] = pixelValue // Green
+    contextImageData[i * bytesPerPixel + 2] = pixelValue // Blue
+    contextImageData[i * bytesPerPixel + 3] = 255 // Alpha (불투명도)
   }
+  // // 첫 번째 프레임을 가져옵니다.
+  // const frameIndex = 0
+  // const start = frameIndex * frameSize
+  // const end = start + frameSize
 
-  ctx.putImageData(imageDataContext, 0, 0)
+  ctx.putImageData(renderedImageData, 0, 0)
 }
 
 /*
