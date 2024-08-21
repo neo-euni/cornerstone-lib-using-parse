@@ -171,15 +171,15 @@ function parseDicomFile() {
 function renderDicomToDiv(parsedData) {
   console.log('div요소에 렌더링하는 함수에 들어옴')
 
-  const imageData = parsedData.value?.image // 이미지 데이터
-  // console.log('imageData:', imageData)
+  const imageDataSet = parsedData.value?.image // 이미지 데이터
+  console.log('imageDataSet:', imageDataSet)
   const rows = parsedData.value?.image?.rows //이미지의 높이(행 수)
-  // console.log('rows:', rows)
+  console.log('rows:', rows)
   const cols = parsedData.value?.image?.cols // 이미지의 너비(열 수)
-  // console.log('columns:', cols)
+  console.log('columns:', cols)
   const pixelData = parsedData.value?.image?.pixelData // 이미지의 픽셀 데이터
-  // console.log('pixelData:', pixelData) // log 찍힘 완료
-  // console.log(typeof pixelData) // type: Uint8ClampedArray
+  console.log('pixelData:', pixelData) // log 찍힘 완료
+  console.log(typeof pixelData) // type: Uint8ClampedArray
   if (!pixelData || !rows || !cols) {
     console.error('Invalid pixel data, rows or columns')
     return
@@ -190,18 +190,22 @@ function renderDicomToDiv(parsedData) {
   output: (type:HTMLElement) div의 id가 'dicomImage' 요소를 반환
   */
   const dicomImageDiv = document.getElementById('dicomImage')
-  const canvas = document.createElement('canvas')
-
   if (!dicomImageDiv) {
-    console.error('Div with id "dicomImage" not found') // 없으면 에러
+    console.error('Div with id "dicomImage" not found')
     return
-  } else {
+  }
+
+  let canvas = dicomImageDiv.querySelector('canvas') // 이미 존재하는 canvas를 찾습니다.
+
+  if (!canvas) {
+    // canvas가 존재하지 않으면 새로 생성합니다.
+    canvas = document.createElement('canvas')
     /*
     기존 canvas가 있다고 하더라도 이미지 자체는 복사되지 않는다
     새로운 canvas 요소를 메모리상에서 생성. HTML에 미리 <canvas> 태그가 있어야 할 필요는 없음
     생성된 canvas를 DOM에 추가해야만 화면에 보이게 됨. 추가하지 않으면 메모리에만 존재
     */
-    dicomImageDiv.appendChild(canvas) //있으면 생성된 canvas를 DOM에 추가
+    dicomImageDiv.appendChild(canvas) // 생성된 canvas를 DOM에 추가
   }
 
   /*
@@ -221,60 +225,88 @@ function renderDicomToDiv(parsedData) {
     return
   }
 
+  // canvas의 너비와 높이를 설정해줘야함, default값은 300x150
   canvas.width = cols
   canvas.height = rows
 
-  const bitsAllocated = parsedData.value?.image?.bitsAllocated || 8
-  const maxPixelValue = Math.pow(2, bitsAllocated) - 1
+  /*
+  0. 1 bit: 0과 1로 이루어진 데이터의 최소 단위
+  1. 1 byte: 8비트로 이루어진 데이터 단위
+  2. 1 pixel: 화소, 화면을 구성하는 가장 기본적인 단위, 한 픽셀에 8비트를 할당하면 한 픽셀은 256가지 색상을 표현할 수 있음
+   - 16비트: 하이컬러(R:G:B = 5:6:5) -> 65536가지 색상 표현 가능
+   - 24비트: 트루컬러(R:G:B = 8:8:8) -> 1677만가지 색상 표현 가능
+  3. 해상도: 단위 길이당 픽셀의 수
+  4. dpi(dots per inch): 인치당 픽셀의 수, pixel 이 1인치에 많이 들어간다면 해상도가 좋다는 의미
+  5. dicom-file의 image type은 JPEG는 손실 압축 방식으로, 이미지의 데이터가 압축되어 저장되어 있음, 알파(투명도) 채널이 없음.
 
-  // ImageData 생성
-  const renderedImageData = ctx.createImageData(cols, rows)
-  const contextImageData = renderedImageData.data
-
-  // 다중 프레임 중 첫 번째 프레임을 렌더링합니다.
-  const bytesPerPixel = 4 // RGBA 4채널
-  const frameSize = rows * cols // 한 프레임의 크기
-
-  for (let i = 0; i < frameSize; i++) {
-    const rawPixelValue = pixelData[i]
-
-    // const imageDataContext = ctx.createImageData(cols, rows)
-    // const imageDataContextData = imageDataContext.data
-
-    const pixelValue = Math.round((rawPixelValue / maxPixelValue) * 255)
-
-    // RGBA 채널에 값 할당 (grayscale을 R, G, B에 동일하게 할당)
-    contextImageData[i * bytesPerPixel] = pixelValue // Red
-    contextImageData[i * bytesPerPixel + 1] = pixelValue // Green
-    contextImageData[i * bytesPerPixel + 2] = pixelValue // Blue
-    contextImageData[i * bytesPerPixel + 3] = 255 // Alpha (불투명도)
-  }
-  // // 첫 번째 프레임을 가져옵니다.
-  // const frameIndex = 0
-  // const start = frameIndex * frameSize
-  // const end = start + frameSize
-
-  ctx.putImageData(renderedImageData, 0, 0)
-}
-
-/*
-  canvasRenderingContext2D 객체가 canvas에 cols,rows값으로 빈 이미지 데이터를 생성함 -> 아무것도 채워지지 않은 상태
-  (width * height * 4) 크기의 Uint8ClampedArray 타입의 data 배열을 포함
-  모든 픽셀의 색상 정보는 투명한 검정색(rgba(0, 0, 0, 0))으로 설정
+  결론:
+  나의 dicomFile sample은, 8비트 그레이스케일(MONOCHROME2: pixel값이 낮을 수록 어두운 색에 가까움 0=검정, 255=흰색) 이미지를 JPEG Baseline (Process 1) 형식으로 압축한 것
+ TODO: 프로덕션 환경에서는
+  - Photometric Interpretation: 이미지타입 정의
+  - Bits Allocated: 각 필셀에 할당된 비트 수
+  - Transfer Syntax UID: image 압축형태? image파일 타입 확인.  jpeg, png등
+  - Number of Frames : 프레임 수
+  를 확인하여 이미지 렌더링하는 방법에 대한 함수를 각각 정의해야한다.
   */
-// ctx.drawImage(imageData, 0, 0, cols, rows)
-// CSSImageValue or HTMLCanvasElement or HTMLImageElement or HTMLVideoElement or ImageBitmap or OffscreenCanvas or SVGImageElement or VideoFrame타입만 할 수 있다고함
 
-// ctx.fillRect(0, 0, cols, rows)
-// ctx.drawImage(, cols, rows)
-// pixelData: Uint8ClampedArray(524288) , imageDataCreated: ImageData { width: 512, height: 512, data: Uint8ClampedArray(1048576) }
-// TODO:팀장님께 여쭤볼것(1) 두 데이터의 크기가 다름.
-// 정상적으로라면 4바이트씩 처리되어(2,097,152 바이트)야 하지만, 현재 각 픽셀이 2바이트로 처리되고 있음. 이를 해결해야 함
+  //description: dicom image가 몇 비트로 표현되는지 확인
+  // output: (number)각 필셀에 할당된 비트 수 (default: 8), 256단계의 회색을 표현할 수 있음
+  const bitsAllocated = parsedData.value?.image?.bitsAllocated || 8
+  console.log('bitsAllocated:', bitsAllocated)
 
-// 테스트용 -> ddd 텍스트는 출력 잘 됨 아마도 텍스트라?
-// const imageParse = 'dddd'
-// dicomImageDiv.innerHTML = imageParse
-// document.getElementById('dicomImage') // id가 dicomImage인 요소를 찾아 반환함
+  // description: cols x rows 크기의 픽셀데이터를 담을 imageData 타입의 메모리 공간 생성.
+  //input: cols, rows -> 이미지의 너비와 높이: 512x512=262144
+  //output: ImageData타입의 객체, Uint8ClampedArray 타입의 배열
+  const imageData = ctx.createImageData(cols, rows)
+  console.log(
+    'imageData 그려진 canvas에 픽셀을 담을 메모리 공간만 설정되어야 함, 따라서 col * row * 알파채널(불투명도) =1048576개의 빈 배열이 그려져야함:',
+    imageData
+  )
+
+  /*
+  description: imageData.data는 Uint8ClampedArray 타입의 배열을 반환함
+  */
+  const imageDataArray = imageData.data
+  console.log(
+    'imageData타입의 data라는 배열에 접근하는것. imageData타입 전체가 나오면 안됨[0,0,0]',
+    imageDataArray
+  )
+
+  /*
+  하나의 프레임 index 크기를 설정
+  return type: number
+  */
+  const frameSize = cols * rows
+  console.log('frameSize 262144나와야함:', frameSize) // 262144
+
+  /*
+  다중 프레임에서 선택 된 프레임의 픽셀데이터만 가져오는 함수(만들어야함)
+  input: pixelData
+  output: imageDataSize 픽셀 데이터를 담을 메모리 공간(imageDataSize)에 픽셀 값을 할당함 -> return type: imageData
+  */
+  const firstFramePixelData = pixelData.slice(0, frameSize)
+  console.log('firstFrameData: 첫번째 frame image만 진짜왔는지 확인해야함', firstFramePixelData)
+
+  /*
+  input: firstFramePixelData
+  output: 하나의 프레임에 해당하는 pixelData를 순회하며 canvas에 픽셀 값을 할당함
+  */
+  for (let i = 0; i < firstFramePixelData.length; i++) {
+    // i = 0
+    let grayscaleValue = firstFramePixelData[i] // grayscaleValue = 0
+    let rgbaIdx = i * 4 // rgbaIdx = 0
+
+    // ImageData의 RGBA 배열에 값 할당
+    imageData.data[rgbaIdx] = grayscaleValue // Red //imageData.data[0] = 0
+    imageData.data[rgbaIdx + 1] = grayscaleValue // Green
+    imageData.data[rgbaIdx + 2] = grayscaleValue // Blue
+    imageData.data[rgbaIdx + 3] = 255
+    // imageDataArray[i] = pixelValue
+  }
+  console.log('putImageData: for문에 들어갔나', imageDataArray)
+  console.log('imageDataArray에 pixel data들어있는 갯수:', imageDataArray.length)
+  ctx.putImageData(imageData, 0, 0)
+}
 
 function formatBirthDate(dateStr: string | undefined): string {
   if (!dateStr) return 'Invalid date'
@@ -290,8 +322,7 @@ function formatBirthDate(dateStr: string | undefined): string {
   }
 }
 
-// computed: vue의 함수형 속성. computed의 파라미터는 로직을 가지고 값을 계산한 후 리턴하는 함수
-//'계산된' 값을 제공하는 함수를 반환, computed 함수를 변경하려면 getter, setter를 사용
+// computed: vue의 함수형 속성. computed의 파라미터는 로직을 가지고 값을 계산한 후 리턴하는 함수 / 계산된' 값을 제공하는 함수를 반환, computed 함수를 변경하려면 getter, setter를 사용
 const tagData = computed(() => ({
   header: {
     tags: ['Prefix', 'transferSyntaxUID'],
