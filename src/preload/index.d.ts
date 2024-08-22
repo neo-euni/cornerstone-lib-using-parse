@@ -14,10 +14,7 @@ declare global {
   interface Window {
     electron: ElectronAPI
     api: {
-      parseDicomFile(filePath: string): null
-      parseDicomData: (filePath: string) => ParsedData
-      // parseImageFile: (filePath: strign)
-      // dicomFileToArrayBuffer: (filePath: string) => ArrayBuffer
+      parseDicomFile(filePath: string): DicomData
     }
   }
 }

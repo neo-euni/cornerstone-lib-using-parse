@@ -57,7 +57,7 @@ function dicomParseDataSet(filePath: string): ParsedData {
   console.log(instance.print())
 
   const image = new Image(dicomDataSet)
-  console.log(image.print())
+  // console.log(image.print())
 
   return new ParsedData(
     preamble,
@@ -72,7 +72,3 @@ function dicomParseDataSet(filePath: string): ParsedData {
 }
 
 export default dicomParseDataSet
-
-// const data = parserDicomFile(dicomFilePath)
-// console.log(data.preamble.print())
-// console.log(data.prefix.print())
